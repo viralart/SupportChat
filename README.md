@@ -1,5 +1,7 @@
 # Support Chat Automation Framework
 
+**The repo is 100% vibe coded and has 0% human interaction**
+
 An end-to-end regression testing suite for the Support Chat platform, built using **Python** and **Playwright**.
 
 ## Features
