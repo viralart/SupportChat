@@ -11,6 +11,7 @@ An end-to-end regression testing suite for the Support Chat platform, built usin
   - Bypassing the AI Chatbot firewall.
   - Escalating to a real Support Agent.
   - Bidirectional, real-time message verification between two isolated browser contexts.
+  - **Agent Ticket Creation**: Automated escalation from chat to official support ticket.
 * **POM Architecture**: Organized using the Page Object Model for scalability.
 * **Bug Documentation**: Integrated findings report (`bugs_report.md`).
 

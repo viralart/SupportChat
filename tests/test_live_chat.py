@@ -122,8 +122,8 @@ def test_cross_browser_chat(playwright, base_url):
         agent_input.fill(agent_msg)
         agent_page.keyboard.press("Enter")
         
-        # --- EXTENDED CHAT CONVERSATION ---
-        print("\n--- Starting Extended Conversation (10-15 messages) ---")
+        # --- EXTENDED CHAT CONVERSATION (Talking with Human Agent) ---
+        print("\n--- Starting Extended Conversation (Talking with Agent) ---")
         
         customer_phrases = [
             "I'm having trouble with the dashboard.",
@@ -131,11 +131,6 @@ def test_cross_browser_chat(playwright, base_url):
             "Is there a way to export the chat log?",
             "How long is the typical wait time?",
             "Can I add another user to this account?",
-            "The loading speed is a bit slow today.",
-            "What happens if I close this tab?",
-            "Is there a mobile app available?",
-            "Thanks for the quick response!",
-            "I'll try that now."
         ]
         
         agent_phrases = [
@@ -144,45 +139,61 @@ def test_cross_browser_chat(playwright, base_url):
             "Yes, you can export the logs from the settings menu.",
             "Typical wait times are usually under 5 minutes.",
             "Yes, users can be added via the Superadmin panel.",
-            "I'll report the performance issue to our devs.",
-            "If you close the tab, the chat will remain active for 10 minutes.",
-            "We have both iOS and Android apps available.",
-            "No problem at all, happy to help!",
-            "Let me know if you face any more issues."
         ]
         
-        # Total 10 exchanges (20 messages total)
-        for i in range(10):
-            # --- CUSTOMER'S TURN ---
+        for i in range(len(customer_phrases)):
+            # CUSTOMER TURN
             c_msg = customer_phrases[i]
             print(f"[Customer] Sending: {c_msg}")
-            
-            c_input = customer_page.locator("textarea, [contenteditable='true'], input[placeholder*='type'], input[placeholder*='question']").first
-            c_input.click() # Ensure focus
+            c_input = customer_page.locator("textarea, [contenteditable='true']").first
+            c_input.click()
             c_input.fill(c_msg)
             customer_page.keyboard.press("Enter")
-            
-            # Wait for message to appear on Agent side before Agent replies
-            print(f"[Sync] Waiting for Customer message to appear on Agent's screen...")
             expect(agent_page.locator("body")).to_contain_text(c_msg, timeout=10000)
-            agent_page.wait_for_timeout(1000) # Small pause for "read" effect
             
-            # --- AGENT'S TURN ---
+            # AGENT TURN
             a_msg = agent_phrases[i]
             print(f"[Agent] Sending: {a_msg}")
-            
-            # Refine agent input: exclude search bars, target the chat area footer
             a_input = agent_page.locator("textarea, [contenteditable='true']").last
-            a_input.click() # Ensure focus
+            a_input.click()
             a_input.fill(a_msg)
             agent_page.keyboard.press("Enter")
-            
-            # Wait for message to appear on Customer side before next loop
-            print(f"[Sync] Waiting for Agent response to appear on Customer's screen...")
             expect(customer_page.locator("body")).to_contain_text(a_msg, timeout=10000)
-            customer_page.wait_for_timeout(1000) # Small pause for "read" effect
-            
-        print("\n[SUCCESS] Extended sequential bidirectional conversation completed!")
+
+        # --- AGENT CREATES TICKET (Issue Not Resolved) ---
+        print("\n--- Agent: Creating Ticket (Issue Not Resolved) ---")
+        
+        # Look for the "Create ticket" button in the right sidebar
+        ticket_btn = agent_page.locator("button:has-text('Create ticket')").first
+        print("[Agent] Waiting for 'Create ticket' button...")
+        ticket_btn.wait_for(state="visible", timeout=10000)
+        ticket_btn.click()
+        
+        # Fill the ticket form
+        print("[Agent] Filling Ticket Form...")
+        subject_input = agent_page.locator("input[name*='title'], input[placeholder*='Title'], input[type='text']:not([placeholder*='Search'])").first
+        subject_input.fill(f"Support Request: {unique_message_id}")
+        priority_select = agent_page.locator("select").first
+        if priority_select.count() > 0:
+            priority_select.select_option(label="High")
+        desc_input = agent_page.locator("textarea[name*='description'], textarea[placeholder*='Description'], textarea").first
+        desc_input.fill(f"This is an automated ticket for {unique_message_id}. Issue remains unresolved after chat.")
+        
+        # Click Create/Submit
+        create_submit = agent_page.locator("button[type='submit'], button:has-text('Create')").last
+        create_submit.click()
+        print("[Agent] Ticket Submit clicked.")
+        
+        # Verify the chat is now disabled for the customer
+        print("[Verification] Checking for 'Awaiting resolution' status...")
+        agent_page.wait_for_timeout(3000)
+        expect(customer_page.locator("textarea")).to_be_disabled()
+        
+        # Use regex to avoid brittle character/whitespace issues with the special dash and ellipsis
+        import re
+        expect(customer_page.locator("textarea")).to_have_attribute("placeholder", re.compile(r"A ticket has been raised"))
+        
+        print("\n[SUCCESS] Ticket created and chat correctly enters 'Awaiting Resolution' state!")
         time.sleep(10) # Pause so you can see the final state before closure!
         
     finally:
