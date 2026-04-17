@@ -12,8 +12,14 @@ def test_cross_browser_chat(playwright, base_url):
     customer_msg = f"Hello! Need help {unique_message_id}"
     agent_msg = f"I am reviewing your request {unique_message_id}"
     
-    # We are running this HEADED with a slow_mo so the user can see it! 
-    browser = playwright.chromium.launch(headless=False, slow_mo=1000)
+    import os
+    is_ci = os.environ.get("CI") == "true"
+    
+    # Run HEADLESS in CI, but HEADED locally so you can see it! 
+    headless_mode = True if is_ci else False
+    slow_mo_time = 0 if is_ci else 1000
+    
+    browser = playwright.chromium.launch(headless=headless_mode, slow_mo=slow_mo_time)
     
     # Context 1: Customer (Smaller viewport on the left)
     customer_ctx = browser.new_context(viewport={"width": 640, "height": 1080})
