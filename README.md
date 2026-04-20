@@ -13,7 +13,6 @@ An end-to-end regression testing suite for the Support Chat platform, built usin
   - Bidirectional, real-time message verification between two isolated browser contexts.
   - **Agent Ticket Creation**: Automated escalation from chat to official support ticket.
 * **POM Architecture**: Organized using the Page Object Model for scalability.
-* **Bug Documentation**: Integrated findings report (`bugs_report.md`).
 
 ## Prerequisites
 
@@ -51,6 +50,3 @@ To run the **Live Chat** bi-directional test specifically (Headed mode):
 ```bash
 pytest tests/test_live_chat.py -vs
 ```
-
-## Bug Findings
-Detailed descriptions of functional issues identified during development can be found in [bugs_report.md](./bugs_report.md).
